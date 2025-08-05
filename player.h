@@ -1,16 +1,16 @@
 
-#define DEFAULT_ANIMATION_DELAY 30
+#define DEFAULT_ANIMATION_DELAY 100  // Slower animation for visibility
 
 unsigned long autoMoveTimer = 0;
-uint16_t autoMoveDelay = 1000;
+uint16_t autoMoveDelay = 2000;  // Longer pause between moves
 
 //== Animation ==
 unsigned long timeToMove;
 uint16_t zoom = 0;
 uint16_t zoomDir = 0;
-uint16_t zoomSpeed = 2;
+uint16_t zoomSpeed = 1;      // Slower zoom for more frames
 uint16_t hShift = 0;
-uint16_t turnSpeed = 16; // higher = faster
+uint16_t turnSpeed = 4;      // Faster turning to reduce blank space
 
 bool canMoveInDirection(Direction dir)
 {
