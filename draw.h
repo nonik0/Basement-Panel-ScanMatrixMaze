@@ -24,6 +24,9 @@ public:
 #define MAX_DEPTH 3
 
 extern uint16_t zoom, hShift;
+extern Rotation playerRotation;
+extern Direction playerHeading;
+extern int playerRow, playerCol;
 
 uint16_t shift;
 bool blocked;
@@ -148,18 +151,18 @@ void drawWalls(byte depth, byte col, byte row)
   xToCorners(SCREEN_HALF_WIDTH - H_INSET * depth + (depth == 0 ? 0 : zoom), outs);
   xToCorners(SCREEN_HALF_WIDTH - H_INSET * (depth + 1) + zoom, ins);
 
-  if (playerRotDir < 0)
+  if (playerRotation == LEFT)
     turnLeftAnimation(outs, ins);
-  if (playerRotDir > 0)
+  if (playerRotation == RIGHT)
     turnRightAnimation(outs, ins);
 
-  if (playerDir == NORTH)
+  if (playerHeading == NORTH)
     lookNorth(row - depth, col);
-  if (playerDir == EAST)
+  if (playerHeading == EAST)
     lookEast(row, col + depth);
-  if (playerDir == SOUTH)
+  if (playerHeading == SOUTH)
     lookSouth(row + depth, col);
-  if (playerDir == WEST)
+  if (playerHeading == WEST)
     lookWest(row, col - depth);
 
   if (hasExit)

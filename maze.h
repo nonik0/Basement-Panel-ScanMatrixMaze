@@ -6,13 +6,20 @@ enum Direction {
   NORTH = 0,
   EAST = 1,
   SOUTH = 2,
-  WEST = 3
+  WEST = 3,
+  NO_DIR = 4
 };
 
+enum Rotation {
+  LEFT = -1,
+  NO_ROT = 0,
+  RIGHT = 1
+};
+
+#define MAZE_WIDTH 16
+#define MAZE_HEIGHT 8
 #define NUM_DIRECTIONS 4
 
-
-// Direction manipulation functions
 inline Direction turnLeft(Direction dir) {
   return (Direction)((dir + 3) % NUM_DIRECTIONS); // Same as (dir - 1 + 4) % 4
 }
@@ -47,15 +54,11 @@ uint16_t MAZE[] = {
   0b1111111111111111,
 };
 
-#define MAZE_WIDTH 16
-#define MAZE_HEIGHT 8
-byte MazeColMax = MAZE_WIDTH;
-byte MazeRowMax = MAZE_HEIGHT;
 
-int playerRow, playerCol; // Where you are in the Maze
-Direction playerDir = NORTH; // Facing direction: NORTH, EAST, SOUTH, WEST
-int playerRotDir = 0; // Turning -1=Left, 0=none, 1=Right
-int playerRowDir = 0, playerColDir = 0; // Delta when walking
+
+// Forward declarations for player variables
+extern int playerRow, playerCol;
+extern Direction playerHeading;
 
 bool hasFrontLeftWall;
 bool hasFrontWall;
@@ -71,12 +74,12 @@ void resetMaze()
   // playerRow = 3;
   playerCol = 1;
   playerRow = 5;
-  playerDir = NORTH;
+  playerHeading = NORTH;
 }
 
 bool isWall(byte row, byte col)
 {
-  if (row < 0 || row > MazeRowMax || col < 0 || col > MazeColMax)
+  if (row < 0 || row >= MAZE_HEIGHT || col < 0 || col >= MAZE_WIDTH)
     return false;
   else
   {
@@ -87,7 +90,7 @@ bool isWall(byte row, byte col)
 bool isExitPosition(byte row, byte col)
 {
   // Check if this position is at the maze boundary (exit)
-  return (row <= 0 || row >= (MazeRowMax - 1) || col <= 0 || col >= (MazeColMax - 1));
+  return (row <= 0 || row >= (MAZE_HEIGHT - 1) || col <= 0 || col >= (MAZE_WIDTH - 1));
 }
 
 void lookNorth(byte row, byte col)
