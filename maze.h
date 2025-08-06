@@ -16,7 +16,7 @@ enum Rotation {
   RIGHT = 1
 };
 
-#define MAZE_WIDTH 15
+#define MAZE_WIDTH 16
 #define MAZE_HEIGHT 9
 #define NUM_DIRECTIONS 4
 
@@ -32,28 +32,29 @@ inline Direction getOppositeDirection(Direction dir) {
   return (Direction)((dir + 2) % NUM_DIRECTIONS);
 }
 
-
+// uint16_t MAZE[MAZE_HEIGHT] = {
+//   0b1111111111110111,
+//   0b1000000011110111,
+//   0b1111101110000001,
+//   0b1111101111010111,
+//   0b1100001111000001,
+//   0b1111101111110111,
+//   0b1000000000000111,
+//   0b1111111111111111,
+//   0b1111111111111111,
+// };
 uint16_t MAZE[MAZE_HEIGHT] = {
-  0b1111111111110111,
-  0b1000000011110111,
-  0b1111101110000001,
+  0b1111111111111111,
+  0b1000000000000001,
+  0b1111111110000001,
   0b1111101111010111,
-  0b1000001111000001,
+  0b1100001111000001,
   0b1111101111110111,
   0b1000000000000111,
   0b1111111111111111,
   0b1111111111111111,
 };
-// uint16_t MAZE[] = {
-//   0b1011111111111111,
-//   0b1011111111111111,
-//   0b1011111111111111,
-//   0b1011111111111111,
-//   0b1011111111111111,
-//   0b1000001111111111,
-//   0b1111111111111111,
-//   0b1111111111111111,
-// };
+
 
 // Forward declarations for player variables
 extern int playerRow, playerCol;
@@ -152,9 +153,11 @@ void generateMaze() {
 
 void resetMaze()
 {
-  generateMaze();
-  playerCol = startCol;
-  playerRow = startRow;
+  // generateMaze();
+  // playerCol = startCol;
+  // playerRow = startRow;
+  playerCol = 1;
+  playerRow = 1;
   playerHeading = EAST;
 }
 
