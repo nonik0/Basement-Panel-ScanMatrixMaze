@@ -10,7 +10,7 @@ Direction playerMoveDirection = NO_DIR;
 bool justTurned = false;
 
 unsigned long playerLastMoved = 0;
-uint16_t playerMoveDelay = 1000;  // Longer pause between moves
+uint16_t playerMoveDelay = 500;  // Longer pause between moves
 
 unsigned long timeToMove;
 uint16_t zoom = 0;
@@ -48,8 +48,8 @@ bool move()
   {
     if (millis() > playerLastMoved)
     {
-      // navigate through maze always taking right turns first when possible
-      if (!justTurned && isPathToRight()) {
+      // navigate through maze always going right at turns when possible, then straight forward, then left at corners 
+      if (!justTurned && canMoveInDirection(turnRight(playerHeading))) {
         playerRotation = RIGHT;
         justTurned = true;
         needsRedraw = true;
@@ -61,7 +61,7 @@ bool move()
         justTurned = false;
         needsRedraw = true;
       }
-      else if (isPathToLeft()) {
+      else if (canMoveInDirection(turnLeft(playerHeading))) {
         playerRotation = LEFT;
         justTurned = true;
         needsRedraw = true;
@@ -103,7 +103,7 @@ bool move()
           zoomDir = 0;
           playerMoveDirection = NO_DIR;
 
-          delay(2000);
+          delay(1000);
           resetMaze();
           return true;  // Reset maze if at exit
         }

@@ -16,8 +16,8 @@ enum Rotation {
   RIGHT = 1
 };
 
-#define MAZE_WIDTH 16
-#define MAZE_HEIGHT 8
+#define MAZE_WIDTH 15
+#define MAZE_HEIGHT 9
 #define NUM_DIRECTIONS 4
 
 inline Direction turnLeft(Direction dir) {
@@ -33,14 +33,15 @@ inline Direction getOppositeDirection(Direction dir) {
 }
 
 
-uint16_t MAZE[] = {
+uint16_t MAZE[MAZE_HEIGHT] = {
   0b1111111111110111,
-  0b1100000011110111,
+  0b1000000011110111,
   0b1111101110000001,
   0b1111101111010111,
   0b1000001111000001,
   0b1111101111110111,
   0b1000000000000111,
+  0b1111111111111111,
   0b1111111111111111,
 };
 // uint16_t MAZE[] = {
@@ -58,6 +59,9 @@ uint16_t MAZE[] = {
 extern int playerRow, playerCol;
 extern Direction playerHeading;
 
+// Maze generation variables
+int startRow, startCol;
+
 bool hasFrontLeftWall;
 bool hasFrontWall;
 bool hasFrontRightWall;
@@ -66,10 +70,91 @@ bool hasBackWall;
 bool hasBackRightWall;
 bool hasExit;
 
+struct Stack {
+  byte data[MAZE_WIDTH * MAZE_HEIGHT][2];
+  int top;
+  
+  void push(byte r, byte c) { data[top][0] = r; data[top][1] = c; top++; }
+  void pop(byte& r, byte& c) { top--; r = data[top][0]; c = data[top][1]; }
+  bool empty() { return top == 0; }
+};
+
+void carveCell(byte row, byte col) {
+  MAZE[row] &= ~(1 << ((MAZE_WIDTH - 1) - col));
+}
+
+bool inBounds(byte row, byte col) {
+  return row > 0 && row < MAZE_HEIGHT - 1 && col > 0 && col < MAZE_WIDTH - 1;
+}
+
+bool isCarved(byte row, byte col) {
+  return !(MAZE[row] & (1 << ((MAZE_WIDTH - 1) - col)));
+}
+
+void generateMaze() {
+  randomSeed(millis());
+  
+  // Fill with walls
+  for (int i = 0; i < MAZE_HEIGHT; i++) MAZE[i] = 0xFFFF;
+  
+  // Simple fixed start position to avoid random issues
+  startRow = 1;
+  startCol = 1;
+  
+  Stack stack = {{}, 0};
+  byte row = startRow, col = startCol;
+  carveCell(row, col);
+  stack.push(row, col);
+  
+  int directions[][2] = {{-2,0}, {2,0}, {0,-2}, {0,2}};
+  
+  // Add safety counter to prevent infinite loops
+  int safetyCounter = 0;
+  const int maxIterations = MAZE_WIDTH * MAZE_HEIGHT * 4;
+  
+  while (!stack.empty() && safetyCounter < maxIterations) {
+    safetyCounter++;
+    
+    // Shuffle directions
+    for (int i = 3; i > 0; i--) {
+      int j = random(i + 1);
+      int temp0 = directions[i][0], temp1 = directions[i][1];
+      directions[i][0] = directions[j][0]; directions[i][1] = directions[j][1];
+      directions[j][0] = temp0; directions[j][1] = temp1;
+    }
+    
+    bool moved = false;
+    for (int i = 0; i < 4; i++) {
+      byte newRow = row + directions[i][0];
+      byte newCol = col + directions[i][1];
+      
+      if (inBounds(newRow, newCol) && !isCarved(newRow, newCol)) {
+        carveCell(row + directions[i][0]/2, col + directions[i][1]/2);
+        carveCell(newRow, newCol);
+        stack.push(row, col);
+        row = newRow;
+        col = newCol;
+        moved = true;
+        break;
+      }
+    }
+    
+    if (!moved) stack.pop(row, col);
+  }
+  
+  // Create accessible exit by ensuring path connects to border
+  // First, make sure there's a path at (1, MAZE_WIDTH-2) 
+  carveCell(1, MAZE_WIDTH - 2);
+  
+  // Then create the exit on the border
+  MAZE[1] &= ~1;  // Clear rightmost bit for exit
+}
+
 void resetMaze()
 {
-  playerCol = 3;
-  playerRow = 1;
+  generateMaze();
+  playerCol = startCol;
+  playerRow = startRow;
   playerHeading = EAST;
 }
 
@@ -132,27 +217,3 @@ void lookWest(byte row, byte col)
   hasBackRightWall = isWall(row - 1, col - 1);
   hasExit          = !hasFrontWall && isExitPosition(row, col);
 }
-
-void look(byte row, byte col)
-{
-  switch (playerHeading)
-  {
-    case NORTH: lookNorth(row, col); break;
-    case EAST:  lookEast(row, col);  break;
-    case SOUTH: lookSouth(row, col); break;
-    case WEST:  lookWest(row, col);  break;
-  }
-}
-
-bool isPathToRight()
-{
-  look(playerRow, playerCol);
-  return !hasFrontRightWall;
-}
-
-bool isPathToLeft()
-{
-  look(playerRow, playerCol);
-  return !hasFrontLeftWall;
-}
-
