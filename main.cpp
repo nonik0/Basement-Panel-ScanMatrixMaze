@@ -86,7 +86,8 @@ void setup(void)
 
   scanInit();
   scanDisplay(true);
-
+  scanTest();
+  
   resetMaze();
 }
 

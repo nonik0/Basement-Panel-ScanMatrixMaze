@@ -82,13 +82,31 @@ void scanSetPixel(int x, int y, bool on)
         drawBuffer[y] &= ~(1 << x);
 }
 
-void scanSetRow(uint8_t row, rowdata_t rowData) {
+void scanSetRow(uint8_t row, rowdata_t rowData)
+{
     drawBuffer[row] = rowData;
 }
 
 void scanShow()
 {
     bufferUpdate = true;
+}
+
+void scanTest()
+{
+    for (int i = 0; i < NUM_ROWS; i++)
+    {
+        for (int j = 0; j < NUM_COLS; j++)
+        {
+            scanSetPixel(j, i, true);
+        }
+    }
+    scanShow();
+
+    delay(2000);
+
+    scanClear();
+    scanShow();
 }
 
 ISR(TCB0_INT_vect)
@@ -105,14 +123,14 @@ ISR(TCB0_INT_vect)
         rowSelect = ~(0x01 << curLine);
     }
 
-    // shift out row data
-    #if defined(MATRIX_16X16)
+// shift out row data
+#if defined(MATRIX_16X16)
     SPI.transfer16(rowData);
     SPI.transfer16(rowSelect);
-    #elif defined(MATRIX_8X8)
+#elif defined(MATRIX_8X8)
     SPI.transfer(rowData);
     SPI.transfer(rowSelect);
-    #endif
+#endif
     digitalWrite(LATCH_PIN, LOW);
     digitalWrite(LATCH_PIN, HIGH);
 
@@ -122,7 +140,8 @@ ISR(TCB0_INT_vect)
         curLine = (curLine + 1) % NUM_ROWS;
         blankCycles = NUM_BLANK_CYCLES;
     }
-    else {
+    else
+    {
         blankCycles--;
     }
 
