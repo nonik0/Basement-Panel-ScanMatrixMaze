@@ -1,5 +1,5 @@
 #include "maze.h"
-#include "scanMatrix.h" // Scan buffer for the LED matrix display
+#include "scan.h"
 
 class Point
 {
