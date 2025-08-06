@@ -37,10 +37,10 @@ inline Direction getOppositeDirection(Direction dir) {
 //   0b1111111111111111,
 // };
 uint16_t MAZE[] = {
-  0b1111111111111111,
   0b1011111111111111,
   0b1011111111111111,
-  0b1000111111111111,
+  0b1011111111111111,
+  0b1011111111111111,
   0b1011111111111111,
   0b1011111111111111,
   0b1111111111111111,
@@ -63,13 +63,14 @@ bool hasFrontRightWall;
 bool hasBackLeftWall;
 bool hasBackWall;
 bool hasBackRightWall;
+bool hasExit;
 
 void resetMaze()
 {
   // playerCol = 12;
   // playerRow = 3;
   playerCol = 1;
-  playerRow = 2;
+  playerRow = 5;
   playerDir = NORTH;
 }
 
@@ -83,6 +84,12 @@ bool isWall(byte row, byte col)
   }
 }
 
+bool isExitPosition(byte row, byte col)
+{
+  // Check if this position is at the maze boundary (exit)
+  return (row <= 0 || row >= (MazeRowMax - 1) || col <= 0 || col >= (MazeColMax - 1));
+}
+
 void lookNorth(byte row, byte col)
 {
   hasFrontLeftWall = isWall(row, col - 1);
@@ -91,6 +98,7 @@ void lookNorth(byte row, byte col)
   hasBackLeftWall  = isWall(row - 1, col - 1);
   hasBackWall      = isWall(row - 1, col);
   hasBackRightWall = isWall(row - 1, col + 1);
+  hasExit          = isExitPosition(row, col);
 }
 
 void lookEast(byte row, byte col)
@@ -101,6 +109,7 @@ void lookEast(byte row, byte col)
   hasBackLeftWall  = isWall(row - 1, col + 1);
   hasBackWall      = isWall(row,  col + 1);
   hasBackRightWall = isWall(row + 1, col + 1);
+  hasExit          = isExitPosition(row, col);
 }
 
 void lookSouth(byte row, byte col)
@@ -111,6 +120,7 @@ void lookSouth(byte row, byte col)
   hasBackLeftWall  = isWall(row + 1, col + 1);
   hasBackWall      = isWall(row + 1, col);
   hasBackRightWall = isWall(row + 1, col - 1);
+  hasExit          = isExitPosition(row + 1, col);
 }
 
 void lookWest(byte row, byte col)
@@ -121,5 +131,6 @@ void lookWest(byte row, byte col)
   hasBackLeftWall  = isWall(row + 1, col - 1);
   hasBackWall      = isWall(row,     col - 1);
   hasBackRightWall = isWall(row - 1, col - 1);
+  hasExit          = isExitPosition(row, col - 1);
 }
 

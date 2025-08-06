@@ -2,7 +2,7 @@
 #define DEFAULT_ANIMATION_DELAY 100  // Slower animation for visibility
 
 unsigned long autoMoveTimer = 0;
-uint16_t autoMoveDelay = 2000;  // Longer pause between moves
+uint16_t autoMoveDelay = 1000;  // Longer pause between moves
 
 //== Animation ==
 unsigned long timeToMove;

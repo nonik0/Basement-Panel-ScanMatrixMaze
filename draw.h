@@ -110,23 +110,19 @@ void drawBackWall(Point *outs, Point *ins)
   drawLine(ins[3].X, ins[3].Y, ins[0].X, ins[0].Y);
 }
 
-// void DebugWalls(byte depth, byte col, byte row)
-//{
-//   if (millis() > timeToDebug)
-//   {
-//     Serial.println("--------------------------");
-//     Debug("depth", depth);
-//     Debug("col", col);
-//     Debug("row", row);
-//     Debug("hasFrontLeftWall", hasFrontLeftWall);
-//     Debug("hasFrontWall", hasFrontWall);
-//     Debug("hasFrontRightWall", hasFrontRightWall);
-//     Debug("hasBackLeftWall", hasBackLeftWall);
-//     Debug("hasBackWall", hasBackWall);
-//     Debug("hasBackRightWall", hasBackRightWall);
-//     timeToDebug = millis() + 2000;
-//   }
-// }
+void drawExit(Point *outs, Point *ins)
+{
+  for (int y = ins[0].Y; y <= ins[2].Y; y++)
+  {
+    for (int x = ins[0].X; x <= ins[1].X; x++)
+    {
+      if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
+      {
+        scanSetPixel(x, y, true);
+      }
+    }
+  }
+}
 
 void turnRightAnimation(Point *outs, Point *ins)
 {
@@ -146,17 +142,16 @@ void turnLeftAnimation(Point *outs, Point *ins)
   }
 }
 
-
 void drawWalls(byte depth, byte col, byte row)
 {
   Point outs[4], ins[4];
   xToCorners(SCREEN_HALF_WIDTH - H_INSET * depth + (depth == 0 ? 0 : zoom), outs);
   xToCorners(SCREEN_HALF_WIDTH - H_INSET * (depth + 1) + zoom, ins);
 
-  if (playerRotDir > 0)
-    turnRightAnimation(outs, ins);
   if (playerRotDir < 0)
     turnLeftAnimation(outs, ins);
+  if (playerRotDir > 0)
+    turnRightAnimation(outs, ins);
 
   if (playerDir == NORTH)
     lookNorth(row - depth, col);
@@ -166,10 +161,17 @@ void drawWalls(byte depth, byte col, byte row)
     lookSouth(row + depth, col);
   if (playerDir == WEST)
     lookWest(row, col - depth);
-  // DebugWalls(depth,row,col);
 
-  if (hasFrontWall)
+  if (hasExit)
+  {
+    drawExit(outs, ins);
+    drawFrontLeftWall(outs, ins);
+    drawFrontRightWall(outs, ins);
+  }
+  else if (hasFrontWall)
+  {
     drawFrontWall(outs, ins);
+  }
   else
   {
     if (hasBackWall)
@@ -196,7 +198,7 @@ void drawMaze()
     if (!blocked)
     {
       drawWalls(depth, playerCol, playerRow);
-      blocked = hasFrontWall || hasBackWall;
+      blocked = hasFrontWall || hasBackWall || hasExit;
     }
 
   scanShow();
