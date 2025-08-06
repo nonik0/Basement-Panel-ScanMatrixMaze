@@ -18,31 +18,29 @@ uint16_t zoomSpeed = 1;
 uint16_t hShift = 0;
 uint16_t turnSpeed = 4;
 
+bool atExit() {
+  return (playerRow == 0 || playerRow == (MAZE_HEIGHT - 1) || playerCol == 0 || playerCol == (MAZE_WIDTH - 1));
+}
+
 bool canMoveInDirection(Direction dir)
 {
   switch (dir) {
-    case NORTH: return playerRow > 0 && !isWall(playerRow - 1, playerCol);
-    case EAST:  return playerCol < (MAZE_WIDTH - 1) && !isWall(playerRow, playerCol + 1);
-    case SOUTH: return playerRow < (MAZE_HEIGHT - 1) && !isWall(playerRow + 1, playerCol);
-    case WEST:  return playerCol > 0 && !isWall(playerRow, playerCol - 1);
-    case NO_DIR: return false;
-    default:    return false;
+    case NORTH:
+      return (playerRow > 0 && !isWall(playerRow - 1, playerCol)) || (playerRow == 0 && atExit());
+    case EAST:
+      return (playerCol < (MAZE_WIDTH - 1) && !isWall(playerRow, playerCol + 1)) || (playerCol == (MAZE_WIDTH - 1) && atExit());
+    case SOUTH:
+      return (playerRow < (MAZE_HEIGHT - 1) && !isWall(playerRow + 1, playerCol)) || (playerRow == (MAZE_HEIGHT - 1) && atExit());
+    case WEST:
+      return (playerCol > 0 && !isWall(playerRow, playerCol - 1)) || (playerCol == 0 && atExit());
+    default:
+      return false;
   }
 }
 
 bool move()
 {
   bool needsRedraw = false;
-
-  // Check for maze escape (only when not moving)
-  if (zoomDir == 0)
-  {
-    if (playerRow == 0 || playerRow == (MAZE_HEIGHT - 1) || playerCol == 0 || playerCol == (MAZE_WIDTH - 1))
-    {
-      resetMaze();
-      return true;  // Always redraw after reset
-    }
-  }
 
   // Auto-movement decision (only when idle)
   if (playerMoveDirection == NO_DIR && playerRotation == NO_ROT)
@@ -53,12 +51,12 @@ bool move()
         playerMoveDirection = playerHeading;
         zoom = 0;
         zoomDir = +zoomSpeed;
-        needsRedraw = true;  // Movement started
+        needsRedraw = true;
       }
       else
       {
-        playerRotation = RIGHT;  // Turn right when blocked
-        needsRedraw = true;  // Turning started
+        playerRotation = RIGHT;
+        needsRedraw = true;
       }
       playerLastMoved = millis() + playerMoveDelay;
     }
@@ -76,14 +74,28 @@ bool move()
         playerHeading = (playerRotation == RIGHT) ? turnRight(playerHeading) : turnLeft(playerHeading);
         playerRotation = NO_ROT;
       }
+
       timeToMove = millis() + DEFAULT_ANIMATION_DELAY;
-      needsRedraw = true;  // Animation frame update
+      needsRedraw = true;
     }
     // Walking animation
     else if (zoomDir != 0)
     {
       zoom += zoomDir;
-      if (zoom >= H_INSET || zoom <= 0)
+
+      if (atExit())
+      {
+        if (zoom >= H_INSET * 2) {
+          zoom = 0;
+          zoomDir = 0;
+          playerMoveDirection = NO_DIR;
+
+          delay(2000);
+          resetMaze();
+          return true;  // Reset maze if at exit
+        }
+      }
+      else if (zoom >= H_INSET)
       {
         zoom = 0;
         zoomDir = 0;
@@ -96,8 +108,9 @@ bool move()
         }
         playerMoveDirection = NO_DIR;
       }
+      
       timeToMove = millis() + DEFAULT_ANIMATION_DELAY;
-      needsRedraw = true;  // Animation frame update
+      needsRedraw = true;
     }
   }
 

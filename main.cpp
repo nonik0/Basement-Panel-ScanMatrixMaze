@@ -10,6 +10,8 @@ void setup(void)
 {
   scanInit();
   scanDisplay(true);
+
+  resetMaze();
 }
 
 void loop(void)

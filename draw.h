@@ -63,10 +63,17 @@ void drawLine(int8_t x0_param, int8_t y0_param, int8_t x1, int8_t y1)
 void xToCorners(uint16_t x, Point *points)
 {
   uint16_t y = (uint16_t)(RATIO * x);
-  points[0].set(X0 - x, Y0 - y); // 0 = top left
-  points[1].set(X0 + x, Y0 - y); // 1 = top right
-  points[2].set(X0 + x, Y0 + y); // 2 = bottom right
-  points[3].set(X0 - x, Y0 + y); // 3 = bottom left
+
+  // Clamp coordinates to screen bounds
+  int16_t left = max(0, (int16_t)(X0 - x));
+  int16_t right = min(SCREEN_WIDTH - 1, (int16_t)(X0 + x));
+  int16_t top = max(0, (int16_t)(Y0 - y));
+  int16_t bottom = min(SCREEN_HEIGHT - 1, (int16_t)(Y0 + y));
+  
+  points[0].set(left, top);     // 0 = top left
+  points[1].set(right, top);    // 1 = top right
+  points[2].set(right, bottom); // 2 = bottom right
+  points[3].set(left, bottom);  // 3 = bottom left
 }
 
 void drawFrontLeftWall(Point *outs, Point *ins)
@@ -97,7 +104,7 @@ void drawBackRightWall(Point *outs, Point *ins)
   drawLine(ins[2].X, ins[2].Y, outs[2].X, ins[2].Y);
 }
 
-void drawFrontWall(Point *outs, Point *ins)
+void drawFrontWall(Point *outs)
 {
   drawLine(outs[0].X, outs[0].Y, outs[1].X, outs[1].Y);
   drawLine(outs[1].X, outs[1].Y, outs[2].X, outs[2].Y);
@@ -105,7 +112,7 @@ void drawFrontWall(Point *outs, Point *ins)
   drawLine(outs[3].X, outs[3].Y, outs[0].X, outs[0].Y);
 }
 
-void drawBackWall(Point *outs, Point *ins)
+void drawBackWall(Point *ins)
 {
   drawLine(ins[0].X, ins[0].Y, ins[1].X, ins[1].Y);
   drawLine(ins[1].X, ins[1].Y, ins[2].X, ins[2].Y);
@@ -113,7 +120,7 @@ void drawBackWall(Point *outs, Point *ins)
   drawLine(ins[3].X, ins[3].Y, ins[0].X, ins[0].Y);
 }
 
-void drawExit(Point *outs, Point *ins)
+void drawExit(Point *ins)
 {
   for (int y = ins[0].Y; y <= ins[2].Y; y++)
   {
@@ -167,18 +174,18 @@ void drawWalls(byte depth, byte col, byte row)
 
   if (hasExit)
   {
-    drawExit(outs, ins);
+    drawExit(ins);
     drawFrontLeftWall(outs, ins);
     drawFrontRightWall(outs, ins);
   }
   else if (hasFrontWall)
   {
-    drawFrontWall(outs, ins);
+    drawFrontWall(outs);
   }
   else
   {
     if (hasBackWall)
-      drawBackWall(outs, ins);
+      drawBackWall(ins);
 
     if (hasFrontLeftWall)
       drawFrontLeftWall(outs, ins);
@@ -194,15 +201,14 @@ void drawWalls(byte depth, byte col, byte row)
 
 void drawMaze()
 {
-  scanClear(); // Clear the scan buffer
+  scanClear();
 
-  blocked = false; // Assume there's nothing in front of us
   for (byte depth = 0; depth < MAX_DEPTH; depth++)
-    if (!blocked)
-    {
-      drawWalls(depth, playerCol, playerRow);
-      blocked = hasFrontWall || hasBackWall || hasExit;
-    }
+  {
+    drawWalls(depth, playerCol, playerRow);
+    if (hasFrontWall || hasBackWall || hasExit)
+      break;
+  }
 
   scanShow();
 }
