@@ -71,14 +71,32 @@ bool hasBackWall;
 bool hasBackRightWall;
 bool hasExit;
 
+// Global stack to avoid stack overflow - uses static allocation
+#define MAX_STACK_SIZE 32
 struct Stack {
-  byte data[MAZE_WIDTH * MAZE_HEIGHT][2];
+  byte data[MAX_STACK_SIZE][2];
   int top;
   
-  void push(byte r, byte c) { data[top][0] = r; data[top][1] = c; top++; }
-  void pop(byte& r, byte& c) { top--; r = data[top][0]; c = data[top][1]; }
+  void push(byte r, byte c) { 
+    if (top < MAX_STACK_SIZE) {
+      data[top][0] = r; 
+      data[top][1] = c; 
+      top++; 
+    }
+  }
+  void pop(byte& r, byte& c) { 
+    if (top > 0) {
+      top--; 
+      r = data[top][0]; 
+      c = data[top][1]; 
+    }
+  }
   bool empty() { return top == 0; }
+  bool full() { return top >= MAX_STACK_SIZE; }
 };
+
+// Global stack instance to avoid stack allocation
+Stack mazeGenStack;
 
 void carveCell(byte row, byte col) {
   MAZE[row] &= ~(1 << ((MAZE_WIDTH - 1) - col));
@@ -102,10 +120,10 @@ void generateMaze() {
   startRow = 1;
   startCol = 1;
   
-  Stack stack = {{}, 0};
+  mazeGenStack.top = 0;  // Reset global stack
   byte row = startRow, col = startCol;
   carveCell(row, col);
-  stack.push(row, col);
+  mazeGenStack.push(row, col);
   
   int directions[][2] = {{-2,0}, {2,0}, {0,-2}, {0,2}};
   
@@ -113,7 +131,7 @@ void generateMaze() {
   int safetyCounter = 0;
   const int maxIterations = MAZE_WIDTH * MAZE_HEIGHT * 4;
   
-  while (!stack.empty() && safetyCounter < maxIterations) {
+  while (!mazeGenStack.empty() && safetyCounter < maxIterations) {
     safetyCounter++;
     
     // Shuffle directions
@@ -132,7 +150,9 @@ void generateMaze() {
       if (inBounds(newRow, newCol) && !isCarved(newRow, newCol)) {
         carveCell(row + directions[i][0]/2, col + directions[i][1]/2);
         carveCell(newRow, newCol);
-        stack.push(row, col);
+        if (!mazeGenStack.full()) {  // Only push if stack has space
+          mazeGenStack.push(row, col);
+        }
         row = newRow;
         col = newCol;
         moved = true;
@@ -140,7 +160,7 @@ void generateMaze() {
       }
     }
     
-    if (!moved) stack.pop(row, col);
+    if (!moved) mazeGenStack.pop(row, col);
   }
   
   // Create accessible exit by ensuring path connects to border
@@ -153,11 +173,9 @@ void generateMaze() {
 
 void resetMaze()
 {
-  // generateMaze();
-  // playerCol = startCol;
-  // playerRow = startRow;
-  playerCol = 1;
-  playerRow = 1;
+  generateMaze();
+  playerCol = startCol;
+  playerRow = startRow;
   playerHeading = EAST;
 }
 
