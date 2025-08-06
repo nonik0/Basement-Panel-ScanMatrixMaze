@@ -33,26 +33,26 @@ inline Direction getOppositeDirection(Direction dir) {
 }
 
 
-// uint16_t MAZE[] = {
-//   0b1111111111110111,
-//   0b1100000011110111,
-//   0b1111101110000001,
-//   0b1111101111010111,
-//   0b1000001111000001,
-//   0b1101101111110111,
-//   0b1000000000000111,
-//   0b1111111111111111,
-// };
 uint16_t MAZE[] = {
-  0b1011111111111111,
-  0b1011111111111111,
-  0b1011111111111111,
-  0b1011111111111111,
-  0b1011111111111111,
-  0b1000001111111111,
-  0b1111111111111111,
+  0b1111111111110111,
+  0b1100000011110111,
+  0b1111101110000001,
+  0b1111101111010111,
+  0b1000001111000001,
+  0b1111101111110111,
+  0b1000000000000111,
   0b1111111111111111,
 };
+// uint16_t MAZE[] = {
+//   0b1011111111111111,
+//   0b1011111111111111,
+//   0b1011111111111111,
+//   0b1011111111111111,
+//   0b1011111111111111,
+//   0b1000001111111111,
+//   0b1111111111111111,
+//   0b1111111111111111,
+// };
 
 // Forward declarations for player variables
 extern int playerRow, playerCol;
@@ -68,11 +68,9 @@ bool hasExit;
 
 void resetMaze()
 {
-  // playerCol = 12;
-  // playerRow = 3;
-  playerCol = 4;
-  playerRow = 5;
-  playerHeading = WEST;
+  playerCol = 3;
+  playerRow = 1;
+  playerHeading = EAST;
 }
 
 bool isWall(byte row, byte col)
@@ -133,5 +131,28 @@ void lookWest(byte row, byte col)
   hasBackWall      = isWall(row,     col - 1);
   hasBackRightWall = isWall(row - 1, col - 1);
   hasExit          = !hasFrontWall && isExitPosition(row, col);
+}
+
+void look(byte row, byte col)
+{
+  switch (playerHeading)
+  {
+    case NORTH: lookNorth(row, col); break;
+    case EAST:  lookEast(row, col);  break;
+    case SOUTH: lookSouth(row, col); break;
+    case WEST:  lookWest(row, col);  break;
+  }
+}
+
+bool isPathToRight()
+{
+  look(playerRow, playerCol);
+  return !hasFrontRightWall;
+}
+
+bool isPathToLeft()
+{
+  look(playerRow, playerCol);
+  return !hasFrontLeftWall;
 }
 

@@ -7,6 +7,7 @@ int playerRow, playerCol;
 Direction playerHeading = NORTH;
 Rotation playerRotation = NO_ROT;
 Direction playerMoveDirection = NO_DIR;
+bool justTurned = false;
 
 unsigned long playerLastMoved = 0;
 uint16_t playerMoveDelay = 1000;  // Longer pause between moves
@@ -42,20 +43,32 @@ bool move()
 {
   bool needsRedraw = false;
 
-  // Auto-movement decision (only when idle)
+  // Auto-movement decision using modified right-hand rule (only when idle)
   if (playerMoveDirection == NO_DIR && playerRotation == NO_ROT)
   {
     if (millis() > playerLastMoved)
     {
-      if (canMoveInDirection(playerHeading)) {
+      // navigate through maze always taking right turns first when possible
+      if (!justTurned && isPathToRight()) {
+        playerRotation = RIGHT;
+        justTurned = true;
+        needsRedraw = true;
+      }
+      else if (canMoveInDirection(playerHeading)) {
         playerMoveDirection = playerHeading;
         zoom = 0;
         zoomDir = +zoomSpeed;
+        justTurned = false;
         needsRedraw = true;
       }
-      else
-      {
+      else if (isPathToLeft()) {
+        playerRotation = LEFT;
+        justTurned = true;
+        needsRedraw = true;
+      }
+      else {
         playerRotation = RIGHT;
+        justTurned = true;
         needsRedraw = true;
       }
       playerLastMoved = millis() + playerMoveDelay;
